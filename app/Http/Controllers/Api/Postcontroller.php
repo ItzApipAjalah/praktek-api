@@ -39,4 +39,50 @@ class Postcontroller extends Controller
 
         return new PostResource(true, 'Data Post Berhasil di tambahkan!', $post);
     }
+
+    public function show($id)
+    {
+        $post = Post::find($id);
+        return new PostResource(true, 'detail data post!', $post);
+    }
+
+    public function destroy($id)
+    {
+        $post = Post::find($id);
+        $post->delete();
+        return new PostResource(true, 'Data Post Berhasil di hapus!', $post);
+    }
+
+    public function update(Request $request, Post $post)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'title' => 'required',
+            'content' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        if ($request->file('image')) {
+            $image = $request->file('image');
+            $image->storeAs('public/posts', $image->hashName());
+
+            $post->update([
+                'image' => $image->hashName(),
+                'title' => $request->title,
+                'content' => $request->content,
+            ]);
+        } else {
+            $post->update([
+                'title' => $request->title,
+                'content' => $request->content,
+            ]);
+        }
+
+        return new PostResource(true, 'Data Post Berhasil di ubah!', $post);
+    }
+
+    
 }
